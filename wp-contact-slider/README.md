@@ -51,6 +51,15 @@ Yes. Just like WordPress default editor, In WP Contact Slider you can use visual
 
 ### Changelog
 
+**2.5.1** 
+* New - Tested compatibility with WordPress Version 6.6.2.
+* New - Tested compatibility with PHP 8.X
+* Improvement - Updated Settings UI
+
+**2.5** 
+* New - Tested compatibility with WordPress Version 6.5.
+* Fixed - Error appearing "instanceof WP_Post_Type......" in some cases.
+
 **2.4.9** 
 * Updated - Freemius SDK Version 2.5.10
 

@@ -306,3 +306,46 @@ function wpcs_register_meta_boxes( $meta_boxes ) {
 	return apply_filters( 'wpcs_meta_boxes', $meta_boxes );
 
 }
+
+
+
+
+add_action( 'submitpost_box', 'wpcs_add_pro_banner' );	
+
+function wpcs_add_pro_banner() {
+	
+	if ( ! function_exists( 'is_plugin_active' ) ) {
+		require_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+	}
+
+    global $post_type;
+	
+    if ( 
+		$post_type === 'wpcs' 
+		&& 
+		( 
+		! is_plugin_active( 'wpcs-advance-settings-addon-premium/wpcs_advance_settings_addon.php' ) 
+		&& ! is_plugin_active( 'wpcs-display-multiple-sliders-premium/wpcs_display_multiple_sliders.php' ) 
+		&& ! is_plugin_active( 'wpcs-fontawesome-icon-addon-premium/wpcs_fontawesome_icon_addon.php' ) 
+		&& ! is_plugin_active( 'wpcs-triggers-addon-premium/wpcs_triggers_addon.php' ) 
+		) 
+		) {
+        $image_url = plugins_url( 'img/dashboardbannervertical.png', dirname( __FILE__ ) );
+        ?>
+		<style>
+			#post-body.columns-2 #side-sortables {
+				min-height: 1px;
+			}
+			div#postbox-container-1{
+				display: flex;
+				flex-direction: column-reverse;
+			}
+		</style>
+        <div class="get-pro-banner">
+			<a href="https://wpcontactslider.com/pricing/?utm_source=wordpress&utm_medium=Plugin&utm_campaign=side_banner&utm_content=banner_image" target="_blank">
+            	<img src="<?php echo esc_url( $image_url ); ?>" alt="Pro-Banner" style="width: 100%;">
+			</a>
+        </div>
+        <?php
+    }
+}
