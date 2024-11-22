@@ -5,8 +5,8 @@
 	Description: Simple Contact Slider to display Contact Form 7, Gravity Forms, some other shortcodes and dispaly random Text or HTML.
 	Author: wpexpertsio
 	Author URI: https://wpcontactslider.com/
-	Tested up to: 6.6
-	Version: 2.5.1
+	Tested up to: 6.5
+	Version: 2.5.2
 */
 
 if ( is_admin() ) {
