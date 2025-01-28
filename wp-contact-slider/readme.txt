@@ -4,7 +4,7 @@ Tags: contact slider, Contact Form 7, Gravity Forms, Ninja Forms, Formidable For
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=pay@objects.ws&item_name=Donation For Plugin
 Requires at least: 4.7
 Tested up to: 6.7
-Stable tag: 2.5.2
+Stable tag: 2.5.3
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -131,6 +131,9 @@ Yes. Just like WordPress default editor, In WP Contact Slider you can use visual
 9. Example of WP Contact Slider with WPForms.
 
 == Changelog ==
+= 2.5.3 - Jan 28, 2025 =
+* Updated - Feedback SDK Updated to latest version.
+
 = 2.5.2 - Nov 22, 2024 =
 * Updated - Feedback SDK Updated to latest version.
 

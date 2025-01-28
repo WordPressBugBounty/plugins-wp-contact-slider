@@ -6,7 +6,7 @@
 	Author: wpexpertsio
 	Author URI: https://wpcontactslider.com/
 	Tested up to: 6.5
-	Version: 2.5.2
+	Version: 2.5.3
 */
 
 if ( is_admin() ) {
