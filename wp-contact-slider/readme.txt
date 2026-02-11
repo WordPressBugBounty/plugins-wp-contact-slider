@@ -1,4 +1,4 @@
-﻿=== WP Contact Slider - Slide Out Contact Form for WordPress to display Contact Form 7, Gravity Forms, WP Forms, Ninja Forms, plain text/HTML & other shortcodes ===
+=== WP Contact Slider – Contact Form Slider Widget ===
 Contributors: wpexpertsio
 Tags: contact slider, Contact Form 7, Gravity Forms, Ninja Forms, Formidable Forms, Form Maker, Form Craft, Visul Form Builder Wp Forms, text slider, instant contact form, CF7
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=pay@objects.ws&item_name=Donation For Plugin
@@ -11,35 +11,49 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Helps you to show slide out contact form to display CF7, Gravity forms, Ninja Forms,  WP Forms, display random text/HTML and support some other forms.
 
 == Description ==
-WP contact slider helps you to show slide out contact form to display Contact form 7 (CF7), Gravity forms, NinjaForms, Wp Forms, Caldera forms, Constant Contact Forms or display random text or HTML.
 
-You can use it in any way you want and can create multiple sliders to display on selected Posts and Pages. You can even select different positions where you want to display your contact button and also can customize the color scheme of the whole slider with easy to use back-end panel.
+[👑 Get Pro](https://wpcontactslider.com/pricing/?utm_source=wordpress_org&utm_medium=readme&utm_campaign=readme&utm_id=readme&utm_content=Get+it+now) | [Documentation](https://wpcontactslider.com/documentation/?utm_source=wp_org&utm_medium=readme&utm_campaign=documentation) | [Support](https://objectsws.atlassian.net/servicedesk/customer/portal/33/group/103/create/350)
+
+WP Contact Slider lets you display a slide-out panel with any contact form shortcode, including Contact Form 7 (CF7), Gravity Forms, NinjaForms, WP Forms, Caldera Forms, Constant Contact Forms, or custom HTML.
+
+Create multiple sliders and choose where they appear on your site. You can also customize the position, button style, and color scheme using an easy-to-use settings panel.
 
 [youtube https://www.youtube.com/watch?v=rGbJXg9Jm8I&feature=youtu.be]
 
 = 📃 Features: =
 - Display plain text or HTML.
+
+- Support for any shortcode-based form.
+
 - [Gravity Forms](http://www.gravityforms.com/) shortcode support.
+
 - [Contact Form 7](https://wordpress.org/plugins/contact-form-7/) shortcode support.
-- [Wp Forms](https://wordpress.org/plugins/wpforms-lite/) shortcode support.
-- [Caldera forms](https://calderaforms.com/) shortcode support.
+
+- [WPForms](https://wordpress.org/plugins/wpforms-lite/) shortcode support.
+
 - [Constant Contact Forms](https://wordpress.org/plugins/constant-contact-forms/) shortcode support.
-- [Pirate Forms](https://wordpress.org/plugins/pirate-forms/) shortcode support.
-- [Fast Secure Contact Form](https://wordpress.org/plugins/si-contact-form/) shortcode support.
+
+- [Contact Form by PirateForms](https://wordpress.org/plugins/pirate-forms/) shortcode support.
+
 - [Formidable Forms](https://wordpress.org/plugins/formidable/) shortcode support.
+
 - [Form Maker](https://wordpress.org/plugins/form-maker/) shortcode support.
-- [Form Craft](https://wordpress.org/plugins/formcraft-form-builder/) shortcode support.
-- [Visual Form Builder](https://wordpress.org/plugins/visual-form-builder/) shortcode support.                
+
+- [FormCraft](https://wordpress.org/plugins/formcraft-form-builder/) shortcode support.
+
+- [Visual Form Builder](https://wordpress.org/plugins/visual-form-builder/) shortcode support.   
+             
 - [Ninja Forms](https://wordpress.org/plugins/ninja-forms/) shortcode support.
-- [Mycred](https://wordpress.org/plugins/mycred/) shortcode support.
+
+- [myCred](https://wordpress.org/plugins/mycred/) shortcode support.
 
 = 📕 Docs & Support =
 
-You can find [Plugin Details](https://wpcontactslider.com), [FAQ](https://wordpress.org/plugins/wp-contact-slider/faq/) and more detailed information about WP Contact Slider on [wpcontactslider.com](https://wpcontactslider.com). 
+Documentation and FAQs are available on the [WP Contact Slider’s official website](https://wpcontactslider.com/). If you need help, please use the [support forum](https://wordpress.org/support/plugin/wp-contact-slider) on WordPress.org to create a new topic.
 
 If you were unable to find the answer to your question on the FAQ or in any of the documentation, you should check the [support forum](https://wordpress.org/support/plugin/wp-contact-slider) on WordPress.org. If you can't locate any topics that pertain to your particular issue, post a new topic for it.
 
-== 🚀 GET MORE POWER WITH WP CONTACT SLIDER PRO 🚀 ==
+[== 🚀 **GET MORE POWER WITH WP CONTACT SLIDER PRO** 🚀 == ](https://wpcontactslider.com/pricing/?utm_source=wordpress_org&utm_medium=readme&utm_campaign=readme&utm_id=readme&utm_content=Get+it+now)
 
 = 👉 Advance Settings =
 With [Advance Settings Add-On](https://wpcontactslider.com/advance-settings/) you get more control over your sliders including following;
@@ -87,17 +101,14 @@ Adding more than 2 slides on right or left would require to change the distance 
 = DISPLAY MULTIPLE SLIDER WITH DIFFERENT SHORTCODES OR HTML WHATEVER YOU WANT =
 While displaying multiple sliders on the same page you can use different shortcodes, i.e you can use contact form 7 in one slider, ninja forms in other and HTML content in third one and so on and use all on the same page.
 
-[Click here for more details 📖 ](https://wpcontactslider.com/pricing/?utm_source=wordpress_org&utm_medium=readme&utm_campaign=readme&utm_id=readme&utm_content=click+here+for+more+details)
 
 = 👉 Font Awesome Icons = 
 With [Font Awesome Icons](https://wpcontactslider.com/font-awesome-icons/), you can easily select an icon from 400+ icons options right from slider settings. You will have the option to display a selected icon with or without label text without any custom CSS just with a single click.
 
-[Click here for more details  📖 ](https://wpcontactslider.com/pricing/?utm_source=wordpress_org&utm_medium=readme&utm_campaign=readme&utm_id=readme&utm_content=click+here+for+more+details)
 
 [ 👉 GET WP CONTACT SLIDER PRO](https://wpcontactslider.com/pricing/?utm_source=wordpress_org&utm_medium=readme&utm_campaign=readme&utm_id=readme&utm_content=Get+it+now)
 
-[Request For Custom Feature](https://wpcontactslider.com/contact-us/)
-
+[ 👉 Request For Custom Feature](https://wpcontactslider.com/contact-us/)
 
 **Interested in contributing to WP Contact Slider**    
 Head over to the [WP Contact Slider **GitHub Repository**](https://github.com/wpexpertsio/WP-Contact-Slider) to find out how you can pitch in ;)
@@ -110,14 +121,14 @@ Head over to the [WP Contact Slider **GitHub Repository**](https://github.com/wp
 
 == Frequently Asked Questions ==
 
-= How to display Gravity forms shortcode in WP contact slider? =
-Simply from back-end choose the option to display shortcode. A box will appear where you can insert your Gravity Forms shortcode and select the plugin type. Save the settings and you are done. 
+= How to display Gravity Forms shortcode in WP Contact Slider? =
+Choose the “Shortcode” option in the slider settings, paste your Gravity Forms shortcode, select the plugin type, and save.
 
-= How to display Contact form 7 shortcode in WP contact slider? =
-From edit window choose the option to display shortcode. A box will appear where you can insert your Contact form 7 shortcode and select the plugin type. Save the settings and you are ready to go. 
+= How do I display a Contact Form 7 shortcode in WP Contact Slider? =
+Open your slider settings, select “Shortcode,” paste your Contact Form 7 shortcode, choose the plugin type, and save.
 
-= Can we use HTML in the slider with plain text? =
-Yes. Just like WordPress default editor, In WP Contact Slider you can use visual or text editor to insert whatever you want including images, text, and HTML.
+= Can I use HTML in the slider? =
+Yes. You can use the built-in editor to insert text, images, or HTML in either Visual or Text mode.
 
 == Screenshots ==
 1. Example of WP Contact Slider with Caldera Form.
@@ -339,6 +350,3 @@ Yes. Just like WordPress default editor, In WP Contact Slider you can use visual
 * Improvement - Updated Settings UI and scripts
 * Improvement - Disabled publicly_queryable from front
 * Improvement - Removed extra space from bottom of title in slider edit window
-
-
-
