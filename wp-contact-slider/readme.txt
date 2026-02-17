@@ -3,8 +3,8 @@ Contributors: wpexpertsio
 Tags: contact slider, Contact Form 7, Gravity Forms, Ninja Forms, Formidable Forms, Form Maker, Form Craft, Visul Form Builder Wp Forms, text slider, instant contact form, CF7
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=pay@objects.ws&item_name=Donation For Plugin
 Requires at least: 4.7
-Tested up to: 6.7
-Stable tag: 2.5.3
+Tested up to: 6.9
+Stable tag: 2.5.4
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -142,6 +142,10 @@ Yes. You can use the built-in editor to insert text, images, or HTML in either V
 9. Example of WP Contact Slider with WPForms.
 
 == Changelog ==
+= 2.5.4 - Feb 13, 2026 =
+* New – Tested compatibility with WordPress Version 6.9.0.
+* Updated – Freemius SDK Updated to latest version.
+
 = 2.5.3 - Jan 28, 2025 =
 * Updated - Feedback SDK Updated to latest version.
 
