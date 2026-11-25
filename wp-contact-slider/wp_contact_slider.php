@@ -1,16 +1,25 @@
 <?php
-/*
-	Plugin Name: WP Contact Slider
-	Plugin URI:	https://wpcontactslider.com/
-	Description: Simple Contact Slider to display Contact Form 7, Gravity Forms, some other shortcodes and dispaly random Text or HTML.
-	Author: wpexpertsio
-	Author URI: https://wpcontactslider.com/
-	Tested up to: 6.9
-	Version: 2.5.4
-	License: GPLv2 or later
-	License URI: https://www.gnu.org/licenses/gpl-2.0.html
-	Text Domain: wp-contact-slider
+/**
+ * Plugin Name: WP Contact Slider
+ * Plugin URI: https://wpcontactslider.com/
+ * Description: Simple Contact Slider to display Contact Form 7, Gravity Forms, some other shortcodes and display random Text or HTML.
+ * Version: 2.5.6
+ * Requires at least: 6.7
+ * Requires PHP: 7.4
+ * Author: wpexpertsio
+ * Author URI: https://wpcontactslider.com/
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: wp-contact-slider
 */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+if ( ! defined( 'WPCS_VERSION' ) ) {
+	define( 'WPCS_VERSION', '2.5.6' );
+}
 
 if ( is_admin() ) {
 
@@ -18,19 +27,135 @@ if ( is_admin() ) {
 	require_once 'inc/wpcs_update_notice.php';
 
 }
-$data = ! isset( $_POST['_wpcs_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpcs_nonce'] ) ), '_wpcs_nonce' ) ? $_REQUEST : '';
 
-if ( ( isset( $data['post_type'] ) && 'wpcs' === $data['post_type'] ) || ( isset( $data['post'] ) && 'wpcs' === get_post_type( $data['post'] ) ) || ( isset( $data['wpcs_lable_text_color'] ) || ( isset( $data['action'] ) && 'trash' === $data['action'] ) ) ) { // checking
+if ( ! function_exists( 'str_starts_with' ) ) {
+	/**
+	 * PHP 8 polyfill so bundled Meta Box can run on PHP 7.4.
+	 *
+	 * @param string $haystack Haystack.
+	 * @param string $needle   Needle.
+	 * @return bool
+	 */
+	function str_starts_with( $haystack, $needle ) {
+		$haystack = (string) $haystack;
+		$needle   = (string) $needle;
+		if ( '' === $needle ) {
+			return true;
+		}
+		return 0 === strncmp( $haystack, $needle, strlen( $needle ) );
+	}
+}
 
-	// For meta-box support
-	if ( is_admin() && ! class_exists( 'RW_Meta_Box' ) ) {
-		require_once 'inc/meta-box/meta-box.php';
+if ( ! function_exists( 'str_ends_with' ) ) {
+	/**
+	 * @param string $haystack Haystack.
+	 * @param string $needle   Needle.
+	 * @return bool
+	 */
+	function str_ends_with( $haystack, $needle ) {
+		$haystack = (string) $haystack;
+		$needle   = (string) $needle;
+		if ( '' === $needle ) {
+			return true;
+		}
+		return substr( $haystack, -strlen( $needle ) ) === $needle;
+	}
+}
+
+if ( ! function_exists( 'str_contains' ) ) {
+	/**
+	 * @param string $haystack Haystack.
+	 * @param string $needle   Needle.
+	 * @return bool
+	 */
+	function str_contains( $haystack, $needle ) {
+		$needle = (string) $needle;
+		if ( '' === $needle ) {
+			return true;
+		}
+		return false !== strpos( (string) $haystack, $needle );
+	}
+}
+
+/**
+ * Loads MetaBox\ integration classes from inc/meta-box/src (Support\ via Composer vendor).
+ *
+ * @param string $class Class name.
+ */
+function wpcs_autoload_meta_box( $class ) {
+	$prefix = 'MetaBox\\';
+	if ( 0 !== strpos( $class, $prefix ) ) {
+		return;
+	}
+	$relative = substr( $class, strlen( $prefix ) );
+	$file     = __DIR__ . '/inc/meta-box/src/' . str_replace( '\\', '/', $relative ) . '.php';
+	if ( is_readable( $file ) ) {
+		require_once $file;
+	}
+}
+
+/**
+ * Whether the current admin request is for a slider screen.
+ *
+ * Screen is not available this early, so query vars identify the post type only (no state change).
+ *
+ * @return bool
+ */
+function wpcs_is_wpcs_admin_request() {
+	if ( ! is_admin() ) {
+		return false;
 	}
 
-	// Declaring Meta fields
-	require_once 'inc/wpcs_meta_fields.php';
+	$post_type = filter_input( INPUT_GET, 'post_type', FILTER_CALLBACK, array( 'options' => 'sanitize_key' ) );
+	if ( 'wpcs' === $post_type ) {
+		return true;
+	}
 
+	$post_id = filter_input( INPUT_GET, 'post', FILTER_VALIDATE_INT );
+	if ( $post_id && 'wpcs' === get_post_type( $post_id ) ) {
+		return true;
+	}
+
+	$post_id = filter_input( INPUT_POST, 'post_ID', FILTER_VALIDATE_INT );
+	return $post_id && 'wpcs' === get_post_type( $post_id );
 }
+
+/**
+ * Whether the request is a bundled Meta Box admin-ajax call (e.g. post field search).
+ *
+ * @return bool
+ */
+function wpcs_is_meta_box_ajax_request() {
+	if ( ! wp_doing_ajax() ) {
+		return false;
+	}
+
+	if ( ! isset( $_REQUEST['action'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Action name only; Meta Box verifies nonces in handlers.
+		return false;
+	}
+
+	$action = sanitize_key( wp_unslash( $_REQUEST['action'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Action name only.
+
+	return '' !== $action && 0 === strpos( $action, 'rwmb_' );
+}
+
+/**
+ * Load bundled Meta Box and slider meta fields on wpcs admin requests only.
+ */
+function wpcs_load_meta_box_admin() {
+	if ( ! wpcs_is_wpcs_admin_request() && ! wpcs_is_meta_box_ajax_request() ) {
+		return;
+	}
+
+	spl_autoload_register( 'wpcs_autoload_meta_box' );
+
+	if ( ! class_exists( 'RW_Meta_Box' ) ) {
+		require_once __DIR__ . '/inc/meta-box/meta-box.php';
+	}
+
+	require_once __DIR__ . '/inc/wpcs_meta_fields.php';
+}
+add_action( 'plugins_loaded', 'wpcs_load_meta_box_admin', 1 );
 
 // For admin functions support
 require_once 'inc/wpcs_admin_functions.php';
@@ -50,17 +175,7 @@ require_once 'inc/wpcs_enque_scripts.php';
 // Add-ons bundle sub menu
 require_once 'inc/wpcs_bundle_menu.php';
 
-register_deactivation_hook( __FILE__, 'wpcs_deactivate' );
-/**
- * @usage to avoid error after migration
- */
-function wpcs_deactivate() {
-
-	delete_option( 'fs_accounts' );
-
-}
-
-if ( ! function_exists( 'shapeSpace_allowed_html' ) ) :
+if ( ! function_exists( 'wpcs_allowed_html' ) ) :
 	function wpcs_allowed_html() {
 
 		$allowed_atts                = array(
@@ -138,8 +253,6 @@ if ( ! function_exists( 'shapeSpace_allowed_html' ) ) :
 		$allowedposttags['input']    = $allowed_atts;
 		$allowedposttags['button']    = $allowed_atts;
 		$allowedposttags['textarea'] = $allowed_atts;
-		$allowedposttags['iframe']   = $allowed_atts;
-		$allowedposttags['style']    = $allowed_atts;
 		$allowedposttags['strong']   = $allowed_atts;
 		$allowedposttags['small']    = $allowed_atts;
 		$allowedposttags['table']    = $allowed_atts;

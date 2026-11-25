@@ -51,6 +51,24 @@ Yes. Just like WordPress default editor, In WP Contact Slider you can use visual
 
 ### Changelog
 
+**2.5.6 - Nov 13, 2026**
+* Updated – Meta Box to 5.15.4 with bundled Composer support library (fixes admin fatal error). Leaflet is bundled with Meta Box (no external map CDN). Requires WordPress 6.7 or newer.
+* Fixed – Plugin Check: removed bundled Meta Box dashboard and abilities modules; Tested up to WordPress 7.1.
+* Removed – Unused duplicate Freemius copy in inc/freemius. Active SDK remains 2.13.5.
+* Fixed – Slider and admin scripts/styles are enqueued with wp_add_inline_script() and wp_add_inline_style().
+* Fixed – Admin requests no longer read the whole request array. Promo notice assets load only on slider screens.
+* Security – Custom slider HTML no longer allows iframe or style elements. The wpcs_allowed_html filter can add them back.
+* Fixed – “Display on All Pages” help text now matches multi-slider display.
+* Removed – Unused tabSlideOut script. Front-end jQuery loads only when a slider is rendered.
+
+**2.5.5 - Oct 16, 2026**
+* Fixed – WordPress.org Guideline 5: removed artificial one-slider-per-page limit; all matching sliders may display.
+* Added – **Display settings** column on All Sliders (all pages, homepage, selected page names).
+* Fixed – **Display on Home** checkbox could not be unchecked (admin script removed).
+* Fixed – Text domain aligned with plugin slug (`wp-contact-slider`).
+* Fixed – Admin notice dismiss AJAX now requires nonce and `manage_options`.
+* Improved – Readme tags and external service (Freemius) disclosure.
+
 **2.5.4 - Feb 13, 2026** 
 * New – Tested compatibility with WordPress Version 6.9.0.
 * Updated – Freemius SDK Updated to latest version.

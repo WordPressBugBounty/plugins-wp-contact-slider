@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * @usage function to display Addons bundle sub menu
  */
@@ -23,11 +27,11 @@ function wpcs_register_bundle_submenu() {
 		) {
 			add_submenu_page(
 				'edit.php?post_type=wpcs',
-				__( 'Unlock Pro Features', 'wpcs' ),
-				'<span class="dashicons dashicons-star-filled"></span> ' . __( 'Unlock Pro Features', 'wpcs' ),
+				__( 'Unlock Pro Features', 'wp-contact-slider' ),
+				'<span class="dashicons dashicons-star-filled"></span> ' . __( 'Unlock Pro Features', 'wp-contact-slider' ),
 				'manage_options',
 				//'wpcs-add-ons-bundle',
-				'https://wpcontactslider.com/pricing/?utm_source=wordpress&utm_medium=Plugin&utm_campaign=submenu&utm_content=Unlock+Pro+Features'
+				'https://wpcontactslider.com/pricing/'
 			);
     }
 

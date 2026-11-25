@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 add_action( 'wp_footer', 'wpcs_display_slider' );
 /**
  * @author Mohammad Mursaleen
@@ -7,118 +11,250 @@ add_action( 'wp_footer', 'wpcs_display_slider' );
  */
 function wpcs_display_slider() {
 
-	global $wp_query;
-	$post_obj = $wp_query->get_queried_object();
-	if ( $post_obj && ! $post_obj instanceof WP_Post_Type ) {
-		$page_id         = $post_obj->ID;
-		$current_page_id = (string) $page_id;
+	$slider_ids = wpcs_get_slider_ids_for_current_request();
+	wpcs_get_tab_stack_layout( $slider_ids );
+
+	foreach ( $slider_ids as $slider_id ) {
+		wpcs_create_slider_slider( $slider_id );
+	}
+}
+
+/**
+ * Per-side tab counts and shared tab width (scaled when multiple sliders share a side).
+ *
+ * @param int[]|null $slider_ids Optional. Defaults to sliders for the current request.
+ * @return array{left: array{count: int, tab_width: int}, right: array{count: int, tab_width: int}}
+ */
+function wpcs_get_tab_stack_layout( $slider_ids = null ) {
+	static $layout = null;
+
+	if ( null !== $layout ) {
+		return $layout;
 	}
 
-	// Code edit to display on all pages //////////// --- start ---////////////
-	$args = array(
-		'post_type'   => 'wpcs',
-		'post_status' => 'publish',
-		'meta_query'  => array(
-			array(
-				'key'     => 'wpcs_display_on_all',
-				'value'   => 'yes',
-				'compare' => '=',
-			),
+	if ( null === $slider_ids ) {
+		$slider_ids = wpcs_get_slider_ids_for_current_request();
+	}
+
+	$layout = array(
+		'left'  => array(
+			'count'     => 0,
+			'tab_width' => 170,
+		),
+		'right' => array(
+			'count'     => 0,
+			'tab_width' => 170,
 		),
 	);
 
-	// The Query
-	$wpcs_query = new WP_Query( $args );
-
-	if ( $wpcs_query->have_posts() ) { // If any slider set to Display on all pages
-
-		wpcs_slider_section( $args );
-		// Restore original Post Data
-		wp_reset_postdata();
-
-		// Code edit to display on all pages //////////// --- end ---////////////
-
-	} elseif ( is_home() || is_front_page() ) { // added is_front_page() -- Fixed in version 1.34
-
-		// WP_Query arguments
-		$args = array(
-			'post_type'   => 'wpcs',
-			'post_status' => 'publish',
-			'meta_key'    => 'wpcs_display_on_home',
-			'meta_value'  => 'yes',
-		);
-
-		// The Query
-		$wpcs_query = new WP_Query( $args );
-
-		// The Loop
-		if ( $wpcs_query->have_posts() ) {
-
-			wpcs_slider_section( $args );
-			// Restore original Post Data
-			wp_reset_postdata();
-
-		} else {   // @since version 2.4 : Added support for pages selected for home
-
-			if(isset($current_page_id) && !empty($current_page_id))
-			{
-				wpcs_check_sliders_for_this_page( $current_page_id );
-			}
-			
-
-		}
-	} elseif ( is_page() || is_single() ) {   // Added support for posts as well since version 1.2
-
-		if(isset($current_page_id) && !empty($current_page_id))
-			{
-				wpcs_check_sliders_for_this_page( $current_page_id );
-			}
-
-	}
-
-}
-
-
-
-function wpcs_check_sliders_for_this_page( $current_page_id ) {
-
-	// WP_Query arguments
-	$args = array(
-		'post_type'      => 'wpcs',
-		'post_status'    => 'publish',
-		'posts_per_page' => -1,
+	$bases = array(
+		'left'  => array(),
+		'right' => array(),
 	);
 
-	// The Query
-	$wpcs_query = new WP_Query( $args );
+	foreach ( $slider_ids as $slider_id ) {
+		$slider_id = (int) $slider_id;
+		if ( ! apply_filters( 'wpcs_render_slider', true, $slider_id ) ) {
+			continue;
+		}
 
-	// The Loop
-	if ( $wpcs_query->have_posts() ) {
+		$position = get_post_meta( $slider_id, 'wpcs_slider_position', true );
+		$side     = ( 'left' === $position ) ? 'left' : 'right';
 
-		while ( $wpcs_query->have_posts() ) {
+		$layout[ $side ]['count']++;
+		$bases[ $side ][] = 170;
+	}
 
-			$wpcs_query->the_post();
+	foreach ( array( 'left', 'right' ) as $side ) {
+		if ( $layout[ $side ]['count'] < 1 ) {
+			continue;
+		}
 
-			// get the pages for which this slider is set
-			$wpcs_pages = get_post_meta( get_the_ID(), 'wpcs_pages', false );
+		$base = ! empty( $bases[ $side ] ) ? max( $bases[ $side ] ) : 170;
+		$layout[ $side ]['tab_width'] = wpcs_compute_side_tab_width( $layout[ $side ]['count'], $base, $side );
+	}
 
-			if ( isset( $current_page_id ) && (isset($wpcs_pages) && is_array($wpcs_pages) && isset($wpcs_pages[0])) ) {
-				// check if this page is one of selected pages
-				if ( in_array( $current_page_id, $wpcs_pages[0] ) ) {
+	/**
+	 * Add-ons may adjust free stacking metrics. They own any custom tab width.
+	 */
+	$layout = apply_filters( 'wpcs_tab_stack_layout', $layout, $slider_ids );
 
-					$args['p'] = get_the_ID(); // To fix bug in version 1.34
-					wpcs_slider_section( $args );
+	return $layout;
+}
 
-					break;
+/**
+ * Tab width for a side: full base when alone, scaled down to fit the viewport when stacked.
+ *
+ * @param int    $count Sliders on this side.
+ * @param int    $base  Largest configured tab width on this side.
+ * @param string $side  left or right.
+ * @return int
+ */
+function wpcs_compute_side_tab_width( $count, $base, $side ) {
+	$count = (int) $count;
+	$base  = max( 1, (int) $base );
 
-				}
-			}
-			// Restore original Post Data
-			wp_reset_postdata();
+	if ( $count <= 1 ) {
+		return $base;
+	}
 
+	$stack_base = (int) apply_filters( 'wpcs_tab_stack_base', 200, null, $side );
+	$usable     = (int) apply_filters( 'wpcs_tab_stack_usable_height', 680, null, $side );
+	$gap        = (int) apply_filters( 'wpcs_tab_stack_gap', 12, null, $side );
+	$min_width  = (int) apply_filters( 'wpcs_tab_width_min', 60, null, $side );
+
+	$space  = max( 50, $usable - $stack_base );
+	$scaled = (int) floor( ( $space - ( $count - 1 ) * $gap ) / $count );
+	$scaled = min( $base, $scaled );
+	$scaled = max( $min_width, $scaled );
+
+	return (int) apply_filters( 'wpcs_tab_width_scaled', $scaled, $count, $base, $side );
+}
+
+/**
+ * Published slider IDs that should render on the current front-end request (deduped).
+ *
+ * @return int[]
+ */
+function wpcs_get_slider_ids_for_current_request() {
+	$current_page_id = wpcs_get_current_queried_content_id();
+
+	$slider_ids = get_posts(
+		array(
+			'post_type'      => 'wpcs',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => 'date',
+			'order'          => 'ASC',
+		)
+	);
+
+	if ( empty( $slider_ids ) ) {
+		return array();
+	}
+
+	$matched = array();
+	foreach ( $slider_ids as $slider_id ) {
+		$slider_id = (int) $slider_id;
+		if ( wpcs_should_display_slider( $slider_id, $current_page_id ) ) {
+			$matched[] = $slider_id;
 		}
 	}
 
+	return $matched;
+}
+
+/**
+ * Current singular content ID for display rules (0 when not applicable).
+ *
+ * @return int
+ */
+function wpcs_get_current_queried_content_id() {
+	global $wp_query;
+
+	$post_obj = $wp_query->get_queried_object();
+	if ( $post_obj && ! $post_obj instanceof WP_Post_Type && isset( $post_obj->ID ) ) {
+		return (int) $post_obj->ID;
+	}
+
+	return 0;
+}
+
+/**
+ * Whether a slider should appear on the current request.
+ *
+ * @param int $slider_id       Slider post ID.
+ * @param int $current_page_id Current content ID (0 if none).
+ * @return bool
+ */
+function wpcs_should_display_slider( $slider_id, $current_page_id ) {
+	if ( wpcs_is_display_meta_enabled( $slider_id, 'wpcs_display_on_all' ) ) {
+		return true;
+	}
+
+	if ( ( is_home() || is_front_page() ) && wpcs_is_display_meta_enabled( $slider_id, 'wpcs_display_on_home' ) ) {
+		return true;
+	}
+
+	if ( $current_page_id > 0 && wpcs_slider_is_assigned_to_page( $slider_id, $current_page_id ) ) {
+		return true;
+	}
+
+	return false;
+}
+
+/**
+ * Normalized post/page IDs assigned to a slider (selected pages field).
+ *
+ * @param int $slider_id Slider post ID.
+ * @return int[]
+ */
+function wpcs_get_slider_assigned_page_ids( $slider_id ) {
+	$raw = get_post_meta( $slider_id, 'wpcs_pages', false );
+	if ( ! is_array( $raw ) || empty( $raw ) ) {
+		return array();
+	}
+
+	$page_ids = array();
+	foreach ( $raw as $entry ) {
+		if ( is_array( $entry ) ) {
+			foreach ( $entry as $page_id ) {
+				if ( is_numeric( $page_id ) ) {
+					$page_ids[] = absint( $page_id );
+				}
+			}
+		} elseif ( is_numeric( $entry ) ) {
+			$page_ids[] = absint( $entry );
+		}
+	}
+
+	$page_ids = array_filter( $page_ids );
+	return array_values( array_unique( $page_ids ) );
+}
+
+/**
+ * Whether the slider is assigned to display on a specific post or page.
+ *
+ * @param int $slider_id Slider post ID.
+ * @param int $page_id     Post or page ID.
+ * @return bool
+ */
+function wpcs_slider_is_assigned_to_page( $slider_id, $page_id ) {
+	$page_id = absint( $page_id );
+	if ( $page_id <= 0 ) {
+		return false;
+	}
+
+	return in_array( $page_id, wpcs_get_slider_assigned_page_ids( $slider_id ), true );
+}
+
+/**
+ * @param string|int $current_page_id Legacy callers may pass string IDs.
+ */
+function wpcs_check_sliders_for_this_page( $current_page_id ) {
+
+	$page_id = absint( $current_page_id );
+	if ( $page_id <= 0 ) {
+		return;
+	}
+
+	$slider_ids = get_posts(
+		array(
+			'post_type'      => 'wpcs',
+			'post_status'    => 'publish',
+			'posts_per_page' => -1,
+			'fields'         => 'ids',
+			'orderby'        => 'date',
+			'order'          => 'ASC',
+		)
+	);
+
+	foreach ( $slider_ids as $slider_id ) {
+		if ( wpcs_slider_is_assigned_to_page( (int) $slider_id, $page_id ) ) {
+			wpcs_create_slider_slider( (int) $slider_id );
+		}
+	}
 }
 
 
@@ -129,8 +265,6 @@ function wpcs_check_sliders_for_this_page( $current_page_id ) {
  */
 function wpcs_slider_section( $args ) {
 
-	$counter = 0;
-
 	$wpcs_query = new WP_Query( $args );
 
 	while ( $wpcs_query->have_posts() ) {
@@ -138,16 +272,8 @@ function wpcs_slider_section( $args ) {
 		$wpcs_query->the_post();
 
 		wpcs_create_slider_slider( get_the_id() );
-
-		$counter++;
-
-		// check to just display not more then one slider on single page
-		if ( 1 === $counter ) {
-			break;
-		}
 	}
 
-	// Restore original Post Data
 	wp_reset_postdata();
 
 }
@@ -217,21 +343,9 @@ function wpcs_display_slider_content( $slider_id ) {
 						<div class="wpcs-caldera-form">
 							<?php
 							echo do_shortcode( $wpcs_shortcode );
+							wpcs_add_front_inline_style( '.cfdatepicker-dropdown {z-index: 99999999999 !important;}' );
+							wpcs_add_front_inline_script( 'jQuery(".cfdatepicker").click(function(){ setTimeout(function(){ jQuery(".cfdatepicker-dropdown").each(function(){ this.style.setProperty("z-index","99999999999","important"); }); }, 100); });' );
 							?>
-							<style>
-								/** WP CONTCACT SLIDER -- Style for Caldera from Date picker fix **/
-								.cfdatepicker-dropdown {z-index: 99999999999 !important;}
-							</style>
-							<script>
-								/** WP CONTCACT SLIDER -- Script for Caldera from Date picker fix **/
-								jQuery('.cfdatepicker').click(function() {
-									setTimeout(function () {
-										jQuery('.cfdatepicker-dropdown').each(function () {
-											this.style.setProperty('z-index', '99999999999', 'important');
-										});
-									}, 100);
-								});
-							</script>
 						</div>
 						<?php
 
@@ -302,11 +416,9 @@ function wpcs_display_slider_content( $slider_id ) {
 						<div class="wpcs-ninja-forms">
 							<?php
 							echo do_shortcode( $wpcs_shortcode );
+							wpcs_add_front_inline_style( '.pika-single {z-index: 99999999999 !important;}' );
 							?>
 						</div>
-						<style>
-							.pika-single {z-index: 99999999999 !important;}
-						</style>
 						<?php
 						break;
 
@@ -345,7 +457,7 @@ function wpcs_display_slider_content( $slider_id ) {
 			break;
 
 		default:
-			echo 'kindly select some option in your slider to display here';
+			echo esc_html__( 'Kindly select some option in your slider to display here.', 'wp-contact-slider' );
 	}
 
 }

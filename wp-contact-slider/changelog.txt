@@ -1,0 +1,226 @@
+# Changelog
+
+All notable changes to this plugin are documented in this file.
+
+= 2.5.6 - Nov 19, 2026 =
+* Updated – Meta Box to 5.15.4 with bundled Composer support library (fixes admin fatal error). Leaflet is bundled with Meta Box (no external map CDN). Requires WordPress 6.7 or newer.
+* Fixed – Plugin Check: removed bundled Meta Box dashboard and abilities modules; Tested up to WordPress 7.1.
+* Removed – Unused duplicate Freemius copy in inc/freemius. Active SDK remains 2.13.5.
+* Fixed – Slider and admin scripts/styles are enqueued with wp_add_inline_script() and wp_add_inline_style().
+* Fixed – Admin requests no longer read the whole request array. Promo notice assets load only on slider screens.
+* Security – Custom slider HTML no longer allows iframe or style elements. The wpcs_allowed_html filter can add them back.
+* Fixed – “Display on All Pages” help text now matches multi-slider display.
+* Removed – Unused tabSlideOut script. Front-end jQuery loads only when a slider is rendered.
+
+= 2.5.5 - Oct 16, 2026 =
+* Fixed – WordPress.org Guideline 5: removed artificial one-slider-per-page limit; all matching sliders may display.
+* Added – **Display settings** column on All Sliders (all pages, homepage, selected page names).
+* Fixed – **Display on Home** checkbox could not be unchecked (admin script removed).
+* Fixed – Text domain aligned with plugin slug (`wp-contact-slider`).
+* Fixed – Admin notice dismiss AJAX now requires nonce and `manage_options`.
+* Improved – Readme tags and external service (Freemius) disclosure.
+
+= 2.5.4 - Feb 13, 2026 =
+* New – Tested compatibility with WordPress Version 6.9.0.
+* Updated – Freemius SDK Updated to latest version.
+
+= 2.5.3 - Jan 28, 2025 =
+* Updated - Feedback SDK Updated to latest version.
+
+= 2.5.2 - Nov 22, 2024 =
+* Updated - Feedback SDK Updated to latest version.
+
+= 2.5.1 =
+* New - Tested compatibility with WordPress Version 6.6.2.
+* New - Tested compatibility with PHP 8.X
+* Improvement - Updated Settings UI
+
+= 2.5 =
+* New - Tested compatibility with WordPress Version 6.5.
+* Fixed - Error appearing "instanceof WP_Post_Type......" in some cases.
+
+= 2.4.10 = 
+* New – Compatible with WordPress Version 6.3.1.
+
+= 2.4.9 = 
+* Updated - Freemius SDK updated
+
+= 2.4.8 = 
+* Tweak - Security Fixes
+
+= 2.4.7 = 
+* Tweak - Code Improvement and Security Fixes
+
+= 2.4.6 = 
+* Fix - Code Improvements
+
+= 2.4.5 = 
+* Updated - Freemius SDK Version 2.4.3
+
+= 2.4.4 =
+* Updated - Freemius SDK Version 2.4.1
+
+= 2.4.3 =
+* Tested upto WordPress 5.4 compatibility
+* Improvement - Added shortcode support for Mycred
+
+= 2.4.2 =
+* Updated - Freemius SDK Version 2.3.1
+
+= 2.4.1 =
+* Tested upto WordPress 5.1.1 compatibility
+* Fix - added check if array exist on pages to avoid any error
+
+= 2.4 =
+* Tested upto WordPress 5.1 compatibility
+* Improvement - Updated Freemius SDK
+* Improvement - Updated Settings UI and scripts
+* Added - Support for pages selected for home
+
+= 2.3 =
+* Tested upto WordPress 5.0.2 compatibility
+* Improvement - Updated Settings UI and scripts
+* Improvement - Disabled publicly_queryable from front
+* Improvement - Removed extra space from bottom of title in slider edit window
+
+= 2.2 =
+* Fix - object parse error appearing in log
+* Added - Classes to all slider divs to give more control for adding general CSS
+* Added - option to enable/disable vertical scrolling
+* Added - filter "wpcs_tab_title" for title displayed on tab 
+* Added - filter "wpcs_render_slider" with $slider_id in argument, to stop slider to render
+* Improvement - Updated dashboard Settings API
+
+= 2.1.6 =
+* Tested for WordPress 4.9.6 compatibility
+* Fix - bug related to displaying multiple sliders on different pages
+* Fix - save meta box toggle effect on page load
+* Fix - hide on small devices and open on page load options combination error
+* Improvement - Updated Settings UI and scripts
+
+= 2.1.4 =
+* Fix - error appeared after migration - Now you would need to deactivate and then activate to get rid of that error
+
+= 2.1.3 =
+* Fix - body getting pushed some cases
+* Added - shortcode support for Ninja Forms
+* Improvement - Added screen readability for a blind person
+
+= 2.1 =
+* Improvement - Updated Settings UI and scripts
+* Improvement - Added filter hook "wpcs_html_content"
+* Improvement - Added action hook "wpcs_before_slider_content"
+* Improvement - Added action hook "wpcs_after_slider_content"
+* Improvement - Added action hook "wpcs_before_slider"
+* Improvement - Added action hook "wpcs_after_slider"
+
+= 2.0.3 =
+* Fix - contact form 7 multiple errors getting displayed
+
+= 2.0.2 =
+* Fix - missing cross image
+* Fix - Hide on small screens if checked
+
+= 2.0 =
+* New - Completely New UI
+* New - Introducing 2 backgrounds ( one for main container and other for form container )
+* Improvement - Optimized JS
+* Improvement - Optimized CSS
+
+= 1.9.16 =
+* Fixed Bug – Width of the container was changing after page load
+
+= 1.9.15=
+* Fixed Bug – Hide tab on responsive screens
+
+= 1.9.14 =
+* Fixed Bug - Caldera form datepicker issue
+* Fixed Bug - error appeared after migration
+* Fixed Bug - breaking on changing screen orientation on small screens
+* Fixed Bug - container width change after submitting the form with ajax request
+
+= 1.9.9 =
+* Fixed Bug - Flickering effect on page load
+* Fixed Bug - Open slider on page load
+
+= 1.9.7 =
+* Fixed Bug - Responsive issue in iphone6
+
+= 1.9.6 =
+* Fixed Bug - After last update during updating/deleting slider there was some issue reported
+
+= 1.9.5 =
+* Added Compatibity - For Theme The7
+* Fixed Conflict - For Visual Composer
+
+= 1.9.3 =
+* Bug fix - Get short links were not working properly
+
+= 1.9.1 =
+* Fixed gravity form responsive issue
+
+= 1.9 =
+* Added shortcode support for Form Maker
+* Added shortcode support for Form Craft
+* Added shortcode support for Visual Form Builder
+
+= 1.8 =
+* Added shortcode support for Pirate Forms
+* Added shortcode support for Fast Secure Contact Form
+* Added shortcode support for Formidable Forms
+
+= 1.7 =
+* Fixed IE 11 reported bug
+* Added shortcode support for WP Forms
+* Added shortcode support for Caldera Forms
+* Added shortcode support for Constant Contact Forms
+
+= 1.62 =
+* Tested for WordPress 4.7.3 compatibility
+* Updated Meta box API
+* Fixed meta-box.php confliction issue reported in support
+
+= 1.52 =
+* Fixed Bug related to tab redirecting to some other page
+
+= 1.50 =
+* Fixed Bug of closing tag issue reported by @bravenewcode. 
+
+= 1.41 =
+* Fixed Bug for random tag movements on page load.
+* Added Fade In effect for a smooth look on page load.
+
+= 1.35 =
+* Fixed Contact Form 7 validation display bug.
+
+= 1.34 =
+* Fixed bug of last added slider being displayed on all pages
+* Fixed bug of slider not being displayed on a home in some cases
+* Added donation link
+
+= 1.31 =
+* Bug Fix.
+
+= 1.3 =
+* Added functionality to display single slider on all pages.
+
+= 1.2 =
+* Fixed confliction with Revolution slider.
+* Fixed bug for Selected Pages Repeater field.
+* Fixed bug of permalinks meta box disappearing in post and pages edit window. 
+* Removed closure function to avoid any error in PHP 5.2 or below.
+* Updated plugin with latest meta box classes.
+* Organized code and added comments.
+* Added filter to customize meta boxes of WP Contact slider outside plugin.
+* Added support to display slider in Selected Posts as well.
+* Added option to hide slider on small devices less than 500px.
+
+= 1.02 =
+* Added option to display slider on home pages
+* Theme's color effect on hover fixed.
+
+= 1.01 =
+* IE label rotation bug fixed 
+
+= 1.0 =
+* Initial release

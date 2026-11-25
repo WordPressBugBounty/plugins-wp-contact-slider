@@ -1,18 +1,14 @@
 <?php
-/**
- * Select tree walker for cascading select fields.
- *
- * @package Meta Box
- */
+defined( 'ABSPATH' ) || die;
 
 /**
- * The select tree walker class.
+ * Select tree walker for cascading select fields.
  */
 class RWMB_Walker_Select_Tree {
 	/**
 	 * Field settings.
 	 *
-	 * @var string
+	 * @var array
 	 */
 	public $field;
 
@@ -42,10 +38,10 @@ class RWMB_Walker_Select_Tree {
 	 * @return string
 	 */
 	public function walk( $options ) {
-		$children = array();
+		$children = [];
 
 		foreach ( $options as $option ) {
-			$parent                = isset( $option->parent ) ? $option->parent : 0;
+			$parent                = $option->parent ?? 0;
 			$children[ $parent ][] = $option;
 		}
 
@@ -63,9 +59,19 @@ class RWMB_Walker_Select_Tree {
 	 * @return string
 	 */
 	public function display_level( $options, $parent_id = 0, $active = false ) {
+		static $output_required = false;
+
 		$field      = $this->field;
 		$walker     = new RWMB_Walker_Select( $field, $this->meta );
 		$attributes = RWMB_Field::call( 'get_attributes', $field, $this->meta );
+
+		if ( $output_required ) {
+			unset( $attributes['required'] );
+		}
+
+		if ( ! empty( $attributes['required'] ) ) {
+			$output_required = true;
+		}
 
 		$children = $options[ $parent_id ];
 		$output   = sprintf(
@@ -80,6 +86,7 @@ class RWMB_Walker_Select_Tree {
 
 		foreach ( $children as $child ) {
 			if ( isset( $options[ $child->value ] ) ) {
+				// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 				$output .= $this->display_level( $options, $child->value, in_array( $child->value, $this->meta ) && $active );
 			}
 		}

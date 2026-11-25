@@ -1,14 +1,53 @@
 <?php
-/**
- * The post field which allows users to select existing posts.
- *
- * @package Meta Box
- */
+defined( 'ABSPATH' ) || die;
 
 /**
- * Post field class.
+ * The post field which allows users to select existing posts.
  */
 class RWMB_Post_Field extends RWMB_Object_Choice_Field {
+	public static function admin_enqueue_scripts( $field = null ): void {
+		parent::admin_enqueue_scripts( $field );
+
+		if ( 'select_advanced' === $field['field_type'] ) {
+			wp_enqueue_style( 'rwmb-object-thumbnail', RWMB_CSS_URL . 'object-thumbnail.css', [], RWMB_VER );
+			wp_style_add_data( 'rwmb-object-thumbnail', 'path', RWMB_CSS_DIR . 'object-thumbnail.css' );
+		}
+	}
+
+	public static function add_actions() {
+		add_action( 'wp_ajax_rwmb_get_posts', [ __CLASS__, 'ajax_get_posts' ] );
+		add_action( 'wp_ajax_nopriv_rwmb_get_posts', [ __CLASS__, 'ajax_get_posts' ] );
+	}
+
+	public static function ajax_get_posts() {
+		$request = rwmb_request();
+		$field   = self::get_ajax_field();
+
+		// Search.
+		$field['query_args']['s'] = $request->filter_post( 'term' );
+
+		// Pagination.
+		if ( 'query:append' === $request->filter_post( '_type' ) ) {
+			$field['query_args']['paged'] = $request->filter_post( 'page', FILTER_SANITIZE_NUMBER_INT );
+		}
+
+		// Query the database.
+		$items = self::query( null, $field );
+		$items = array_values( $items );
+
+		$items = apply_filters( 'rwmb_ajax_get_posts', $items, $field, $request );
+
+		$data = [ 'items' => $items ];
+
+		// More items for pagination.
+		$limit = (int) ( $field['query_args']['posts_per_page'] ?? -1 );
+		if ( -1 !== $limit && count( $items ) === $limit ) {
+			$data['more'] = true;
+		}
+
+		wp_send_json_success( $data );
+	}
+
 	/**
 	 * Normalize parameters for field.
 	 *
@@ -16,14 +55,12 @@ class RWMB_Post_Field extends RWMB_Object_Choice_Field {
 	 * @return array
 	 */
 	public static function normalize( $field ) {
-		$field = wp_parse_args(
-			$field,
-			array(
-				'post_type'  => 'post',
-				'parent'     => false,
-				'query_args' => array(),
-			)
-		);
+		$field = wp_parse_args( $field, [
+			'post_type'      => 'post',
+			'parent'         => false,
+			'query_args'     => [],
+			'show_thumbnail' => false,
+		] );
 
 		$field['post_type'] = (array) $field['post_type'];
 
@@ -37,16 +74,13 @@ class RWMB_Post_Field extends RWMB_Object_Choice_Field {
 			$post_type        = reset( $field['post_type'] );
 			$post_type_object = get_post_type_object( $post_type );
 			if ( ! empty( $post_type_object ) ) {
-				// Translators: %s is the taxonomy singular label.
+				// Translators: %s is the post singular label.
 				$placeholder = sprintf( __( 'Select a %s', 'meta-box' ), strtolower( $post_type_object->labels->singular_name ) );
 			}
 		}
-		$field = wp_parse_args(
-			$field,
-			array(
-				'placeholder' => $placeholder,
-			)
-		);
+		$field = wp_parse_args( $field, [
+			'placeholder' => $placeholder,
+		] );
 
 		// Set parent option, which will change field name to `parent_id` to save as post parent.
 		if ( $field['parent'] ) {
@@ -56,51 +90,96 @@ class RWMB_Post_Field extends RWMB_Object_Choice_Field {
 
 		$field = parent::normalize( $field );
 
+		// Set default query args.
+		$posts_per_page      = $field['ajax'] ? 10 : -1;
+		$field['query_args'] = wp_parse_args( $field['query_args'], [
+			'post_type'      => $field['post_type'],
+			'post_status'    => 'publish',
+			'posts_per_page' => $posts_per_page,
+		] );
+
+		if ( 'select_advanced' === $field['field_type'] ) {
+			$supports = false;
+			foreach ( $field['post_type'] as $pt ) {
+				if ( post_type_supports( $pt, 'thumbnail' ) ) {
+					$supports = true;
+					break;
+				}
+			}
+
+			$field['show_thumbnail']               = $supports;
+			$field['js_options']['show_thumbnail'] = $supports;
+		}
+
+		parent::set_ajax_params( $field );
+
 		return $field;
 	}
 
-	/**
-	 * Query posts for field options.
-	 *
-	 * @param  array $field Field settings.
-	 * @return array        Field options array.
-	 */
-	public static function query( $field ) {
-		$args = wp_parse_args(
-			$field['query_args'],
-			array(
-				'post_type'              => $field['post_type'],
-				'post_status'            => 'publish',
-				'posts_per_page'         => -1,
-				'no_found_rows'          => true,
-				'update_post_meta_cache' => false,
-				'update_post_term_cache' => false,
-			)
-		);
+	public static function query( $meta, array $field ): array {
+		$show_thumbnail = ! empty( $field['show_thumbnail'] );
+
+		$args = wp_parse_args( $field['query_args'], [
+			'search_columns'         => [ 'post_title' ],
+			'no_found_rows'          => true,
+			'update_post_meta_cache' => $show_thumbnail,
+			'update_post_term_cache' => false,
+			'mb_field_id'            => $field['id'],
+		] );
+
+		$meta = wp_parse_id_list( (array) $meta );
+
+		// Query only selected items.
+		if ( ! empty( $field['ajax'] ) && ! empty( $meta ) ) {
+			$args['posts_per_page'] = count( $meta );
+			$args['post__in']       = $meta;
+		}
 
 		// Get from cache to prevent same queries.
-		$cache_key = md5( serialize( $args ) ); // phpcs:ignore
+		$last_changed = wp_cache_get_last_changed( 'posts' );
+		// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.serialize_serialize
+		$key       = md5( serialize( $args ) );
+		$cache_key = "$key:$last_changed";
 		$options   = wp_cache_get( $cache_key, 'meta-box-post-field' );
+
 		if ( false !== $options ) {
 			return $options;
 		}
 
-		$query   = new WP_Query( $args );
-		$options = array();
-		foreach ( $query->posts as $post ) {
-			$options[ $post->ID ] = array_merge(
-				array(
-					'value'  => $post->ID,
-					'label'  => $post->post_title,
-					'parent' => $post->post_parent,
-				),
-				(array) $post
-			);
+		$query = new WP_Query( $args );
+		$posts = $query->posts;
+
+		if ( $show_thumbnail ) {
+			$thumb_ids = array_filter( array_map( 'get_post_thumbnail_id', $posts ) );
+			if ( $thumb_ids ) {
+				_prime_post_caches( $thumb_ids, false, true );
+			}
+		}
+
+		$options = [];
+		foreach ( $posts as $post ) {
+			if ( ! current_user_can( 'read_post', $post->ID ) ) {
+				continue;
+			}
+
+			$label = $post->post_title ? $post->post_title : __( '(No title)', 'meta-box' );
+			$label = self::filter( 'choice_label', $label, $field, $post );
+
+			$option = [
+				'value'  => $post->ID,
+				'label'  => $label,
+				'parent' => $post->post_parent,
+			];
+
+			if ( $show_thumbnail ) {
+				$option['thumbnail'] = get_the_post_thumbnail_url( $post, 'thumbnail' ) ?: '';
+			}
+
+			$options[ $post->ID ] = $option;
 		}
 
 		// Cache the query.
 		wp_cache_set( $cache_key, $options, 'meta-box-post-field' );
-
 		return $options;
 	}
 
@@ -124,24 +203,60 @@ class RWMB_Post_Field extends RWMB_Object_Choice_Field {
 	/**
 	 * Format a single value for the helper functions. Sub-fields should overwrite this method if necessary.
 	 *
-	 * @param array    $field   Field parameters.
-	 * @param string   $value   The value.
-	 * @param array    $args    Additional arguments. Rarely used. See specific fields for details.
-	 * @param int|null $post_id Post ID. null for current post. Optional.
+	 * @param array $field   Field parameters.
+	 * @param int   $value   The value.
+	 * @param array $args    Additional arguments. Rarely used. See specific fields for details.
+	 * @param ?int  $post_id Post ID. null for current post. Optional.
 	 *
 	 * @return string
 	 */
 	public static function format_single_value( $field, $value, $args, $post_id ) {
-		return ! $value ? '' : sprintf(
-			'<a href="%s" title="%s">%s</a>',
-			esc_url( get_permalink( $value ) ),
-			the_title_attribute(
-				array(
-					'post' => $value,
-					'echo' => false,
-				)
-			),
-			get_the_title( $value )
+		if ( empty( $value ) ) {
+			return '';
+		}
+
+		/**
+		 * Allow developers to change the value of the post. Used for WPML integration.
+		 * @var int|string $value The post ID.
+		 * @var array $field The field parameters.
+		 * @internal
+		 */
+		$value = apply_filters( '_rwmb_post_format_single_value', $value, $field );
+
+		$link = $args['link'] ?? 'view';
+		$text = get_the_title( $value );
+
+		if ( false === $link ) {
+			return $text;
+		}
+		$url = get_permalink( $value );
+		if ( 'edit' === $link ) {
+			$url = get_edit_post_link( $value );
+		}
+
+		return sprintf( '<a href="%s">%s</a>', esc_url( $url ), wp_kses_post( $text ) );
+	}
+
+	public static function add_new_form( array $field ): string {
+		if ( ! current_user_can( 'edit_posts' ) ) {
+			return '';
+		}
+
+		if ( 1 !== count( $field['post_type'] ) ) {
+			return '';
+		}
+
+		$post_type = reset( $field['post_type'] );
+		if ( ! post_type_exists( $post_type ) ) {
+			return '';
+		}
+
+		$post_type_object = get_post_type_object( $post_type );
+
+		return sprintf(
+			'<a href="#" class="rwmb-post-add-button rwmb-modal-add-button" data-url="%s">%s</a>',
+			admin_url( $post_type === 'post' ? 'post-new.php' : 'post-new.php?post_type=' . $post_type ),
+			esc_html( $post_type_object->labels->add_new_item )
 		);
 	}
 }

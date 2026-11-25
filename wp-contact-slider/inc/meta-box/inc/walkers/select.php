@@ -1,12 +1,8 @@
 <?php
-/**
- * Select walker select fields.
- *
- * @package Meta Box
- */
+defined( 'ABSPATH' ) || die;
 
 /**
- * The select walker class.
+ * Select walker select fields.
  */
 class RWMB_Walker_Select extends RWMB_Walker_Base {
 	/**
@@ -20,16 +16,25 @@ class RWMB_Walker_Select extends RWMB_Walker_Base {
 	 * @param array  $args              An array of additional arguments.
 	 * @param int    $current_object_id ID of the current item.
 	 */
-	public function start_el( &$output, $object, $depth = 0, $args = array(), $current_object_id = 0 ) {
-		$meta   = $this->meta;
+	public function start_el( &$output, $object, $depth = 0, $args = [], $current_object_id = 0 ) {
 		$indent = str_repeat( '&nbsp;', $depth * 4 );
 
-		$output .= sprintf(
-			'<option value="%s" %s>%s%s</option>',
+		$attrs = sprintf(
+			'value="%s" %s',
 			esc_attr( $object->value ),
-			selected( in_array( $object->value, $meta ), true, false ),
+			// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+			selected( in_array( $object->value, $this->meta ), true, false )
+		);
+
+		if ( ! empty( $object->thumbnail ) ) {
+			$attrs .= ' data-thumbnail="' . esc_url( $object->thumbnail ) . '"';
+		}
+
+		$output .= sprintf(
+			'<option %s>%s%s</option>',
+			$attrs,
 			$indent,
-			esc_html( RWMB_Field::filter( 'choice_label', $object->label, $this->field, $object ) )
+			esc_html( $object->label )
 		);
 	}
 }

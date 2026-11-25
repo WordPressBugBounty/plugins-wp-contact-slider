@@ -1,5 +1,43 @@
-/*submenu pro css*/
+/* Submenu pro highlight (when premium add-ons are not active). */
 .menu-icon-wpcs ul.wp-submenu-wrap li:nth-child(4) a {
 	color: #efd235 !important;
 	font-weight: 700;
+}
+
+/* All Sliders list — Display settings column badges. */
+.column-wpcs_display_settings {
+	vertical-align: top;
+}
+
+.wpcs-display-badges {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	max-width: 420px;
+}
+
+.wpcs-display-badge {
+	display: inline-block;
+	margin: 0;
+	padding: 5px 15px 6px 16px;
+	border: 1px solid #ffa41c;
+	border-radius: 30px;
+	font-size: 13px;
+	line-height: 20px;
+	color: #815400;
+	text-transform: capitalize;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+.wpcs-display-badge--more {
+	border-color: #c3c4c7;
+	color: #50575e;
+	font-size: 12px;
+	padding: 4px 12px;
+}
+
+body.post-type-wpcs #minor-publishing-actions,
+body.post-type-wpcs #misc-publishing-actions {
+	display: none !important;
 }

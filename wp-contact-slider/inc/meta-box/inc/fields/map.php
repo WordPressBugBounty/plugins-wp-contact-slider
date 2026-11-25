@@ -1,60 +1,18 @@
 <?php
+defined( 'ABSPATH' ) || die;
+
 /**
  * The Google Maps field.
- *
- * @package Meta Box
- */
-
-/**
- * Map field class.
  */
 class RWMB_Map_Field extends RWMB_Field {
-	/**
-	 * Enqueue scripts and styles.
-	 */
 	public static function admin_enqueue_scripts() {
-		wp_enqueue_style( 'rwmb-map', RWMB_CSS_URL . 'map.css', array(), RWMB_VER );
+		wp_enqueue_style( 'rwmb-map', RWMB_CSS_URL . 'map.css', [], RWMB_VER );
+		wp_style_add_data( 'rwmb-map', 'path', RWMB_CSS_DIR . 'map.css' );
 
-		/**
-		 * Since June 2016, Google Maps requires a valid API key.
-		 *
-		 * @link http://googlegeodevelopers.blogspot.com/2016/06/building-for-scale-updates-to-google.html
-		 * @link https://developers.google.com/maps/documentation/javascript/get-api-key
-		 */
-		$args            = func_get_args();
-		$field           = $args[0];
-		$google_maps_url = add_query_arg(
-			array(
-				'key'      => $field['api_key'],
-				'language' => $field['language'],
-			),
-			'https://maps.google.com/maps/api/js'
-		);
-
-		/**
-		 * Allows developers load more libraries via a filter.
-		 *
-		 * @link https://developers.google.com/maps/documentation/javascript/libraries
-		 */
-		$google_maps_url = apply_filters( 'rwmb_google_maps_url', $google_maps_url );
-		wp_register_script( 'google-maps', esc_url_raw( $google_maps_url ), array(), RWMB_VER, true );
-		wp_enqueue_script(
-			'rwmb-map',
-			RWMB_JS_URL . 'map.js',
-			array(
-				'jquery-ui-autocomplete',
-				'google-maps',
-			),
-			RWMB_VER,
-			true
-		);
-		RWMB_Helpers_Field::localize_script_once(
-			'rwmb-map',
-			'RWMB_Map',
-			array(
-				'no_results_string' => __( 'No results found', 'meta-box' ),
-			)
-		);
+		wp_enqueue_script( 'rwmb-map', RWMB_JS_URL . 'map.js', [ 'jquery-ui-autocomplete' ], RWMB_VER, true );
+		RWMB_Helpers_Field::localize_script_once( 'rwmb-map', 'RWMB_Map', [
+			'no_results_string' => __( 'No results found', 'meta-box' ),
+		] );
 	}
 
 	/**
@@ -72,21 +30,18 @@ class RWMB_Map_Field extends RWMB_Field {
 			esc_attr( $address )
 		);
 
+		$attributes          = self::get_attributes( $field, $meta );
+		$attributes['type']  = 'hidden';
+		$attributes['value'] = $meta;
+
 		$html .= sprintf(
-			'<div class="rwmb-map-canvas" data-default-loc="%s" data-region="%s"></div>
-			<input type="hidden" name="%s" class="rwmb-map-coordinate" value="%s">',
+			'<div class="rwmb-map-canvas" data-default-loc="%s" data-region="%s" data-marker_draggable="%s"></div>
+			<input %s>',
 			esc_attr( $field['std'] ),
 			esc_attr( $field['region'] ),
-			esc_attr( $field['field_name'] ),
-			esc_attr( $meta )
+			esc_attr( $field['marker_draggable'] ? 'true' : 'false' ),
+			self::render_attributes( $attributes )
 		);
-
-		if ( $field['address_field'] ) {
-			$html .= sprintf(
-				'<button class="button rwmb-map-goto-address-button">%s</button>',
-				esc_html__( 'Find Address', 'meta-box' )
-			);
-		}
 
 		$html .= '</div>';
 
@@ -102,19 +57,17 @@ class RWMB_Map_Field extends RWMB_Field {
 	 */
 	public static function normalize( $field ) {
 		$field = parent::normalize( $field );
-		$field = wp_parse_args(
-			$field,
-			array(
-				'std'           => '',
-				'address_field' => '',
-				'language'      => '',
-				'region'        => '',
+		$field = wp_parse_args( $field, [
+			'std'              => '',
+			'address_field'    => '',
+			'language'         => '',
+			'region'           => '',
+			'marker_draggable' => true,
 
-				// Default API key, required by Google Maps since June 2016.
-				// Users should overwrite this key with their own key.
-				'api_key'       => 'AIzaSyC1mUh87SGFyf133tpZQJa-s96p0tgnraQ',
-			)
-		);
+			// Default API key, required by Google Maps since June 2016.
+			// Users should overwrite this key with their own key.
+			'api_key'          => 'AIzaSyC1mUh87SGFyf133tpZQJa-s96p0tgnraQ',
+		] );
 
 		return $field;
 	}
@@ -130,75 +83,73 @@ class RWMB_Map_Field extends RWMB_Field {
 	 *
 	 * @return mixed Array(latitude, longitude, zoom)
 	 */
-	public static function get_value( $field, $args = array(), $post_id = null ) {
-		$value                               = parent::get_value( $field, $args, $post_id );
+	public static function get_value( $field, $args = [], $post_id = null ) {
+		$value = parent::get_value( $field, $args, $post_id );
+
+		if ( is_array( $value ) ) {
+			$location = [];
+			foreach ( $value as $clone ) {
+				list( $latitude, $longitude, $zoom ) = explode( ',', $clone . ',,' );
+				$location[]                          = compact( 'latitude', 'longitude', 'zoom' );
+			}
+			return $location;
+		}
+
 		list( $latitude, $longitude, $zoom ) = explode( ',', $value . ',,' );
 		return compact( 'latitude', 'longitude', 'zoom' );
 	}
 
 	/**
-	 * Output the field value.
-	 * Display Google maps.
-	 *
-	 * @param  array    $field   Field parameters.
-	 * @param  array    $args    Additional arguments for the map.
-	 * @param  int|null $post_id Post ID. null for current post. Optional.
-	 *
-	 * @return string HTML output of the field
+	 * Format value before render map
+	 * @param array $field    Field settings.
+	 * @param mixed $value    Field value.
+	 * @param mixed $args     Additional arguments.
+	 * @param mixed $post_id  Post ID.
+	 * @return string
 	 */
-	public static function the_value( $field, $args = array(), $post_id = null ) {
-		$value = parent::get_value( $field, $args, $post_id );
-		$args  = wp_parse_args(
-			$args,
-			array(
-				'api_key' => isset( $field['api_key'] ) ? $field['api_key'] : '',
-			)
-		);
+	public static function format_single_value( $field, $value, $args, $post_id ) {
+		$args = wp_parse_args( $args, [
+			'api_key' => $field['api_key'] ?? '',
+		] );
 		return self::render_map( $value, $args );
 	}
 
 	/**
 	 * Render a map in the frontend.
 	 *
-	 * @param array $location The [latitude, longitude[, zoom]] location.
-	 * @param array $args     Additional arguments for the map.
+	 * @param string $location The "latitude,longitude[,zoom]" location.
+	 * @param array  $args     Additional arguments for the map.
 	 *
 	 * @return string
 	 */
-	public static function render_map( $location, $args = array() ) {
-		list( $latitude, $longitude, $zoom ) = explode( ',', $location . ',,' );
+	public static function render_map( $location, $args = [] ) {
+		// For compatibility with previous version, or within groups.
+		if ( is_string( $location ) ) {
+			list( $latitude, $longitude, $zoom ) = explode( ',', $location . ',,' );
+		} else {
+			// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
+			extract( $location );
+		}
+
 		if ( ! $latitude || ! $longitude ) {
 			return '';
 		}
 
-		$args = wp_parse_args(
-			$args,
-			array(
-				'latitude'     => $latitude,
-				'longitude'    => $longitude,
-				'width'        => '100%',
-				'height'       => '480px',
-				'marker'       => true, // Display marker?
-				'marker_title' => '', // Marker title, when hover.
-				'info_window'  => '', // Content of info window (when click on marker). HTML allowed.
-				'js_options'   => array(),
-				'zoom'         => $zoom,
+		$args = wp_parse_args( $args, [
+			'latitude'     => $latitude,
+			'longitude'    => $longitude,
+			'width'        => '100%',
+			'height'       => '480px',
+			'marker'       => true, // Display marker?
+			'marker_title' => '', // Marker title, when hover.
+			'info_window'  => '', // Content of info window (when click on marker). HTML allowed.
+			'js_options'   => [],
+			'zoom'         => $zoom,
 
-				// Default API key, required by Google Maps since June 2016.
-				// Users should overwrite this key with their own key.
-				'api_key'      => 'AIzaSyC1mUh87SGFyf133tpZQJa-s96p0tgnraQ',
-			)
-		);
+			'api_key'      => '',
+		] );
 
-		$google_maps_url = add_query_arg( 'key', $args['api_key'], 'https://maps.google.com/maps/api/js' );
-
-		/*
-		 * Allows developers load more libraries via a filter.
-		 * @link https://developers.google.com/maps/documentation/javascript/libraries
-		 */
-		$google_maps_url = apply_filters( 'rwmb_google_maps_url', $google_maps_url );
-		wp_register_script( 'google-maps', esc_url_raw( $google_maps_url ), array(), RWMB_VER, true );
-		wp_enqueue_script( 'rwmb-map-frontend', RWMB_JS_URL . 'map-frontend.js', array( 'google-maps' ), RWMB_VER, true );
+		wp_enqueue_script( 'rwmb-map-frontend', RWMB_JS_URL . 'map-frontend.js', [ 'jquery' ], RWMB_VER, true );
 
 		/*
 		 * Google Maps options.
@@ -206,16 +157,19 @@ class RWMB_Map_Field extends RWMB_Field {
 		 * This array will be convert to Javascript Object and pass as map options.
 		 * @link https://developers.google.com/maps/documentation/javascript/reference
 		 */
-		$args['js_options'] = wp_parse_args(
-			$args['js_options'],
-			array(
-				// Default to 'zoom' level set in admin, but can be overwritten.
-				'zoom'      => $args['zoom'],
+		$args['js_options'] = wp_parse_args( $args['js_options'], [
+			// Default to 'zoom' level set in admin, but can be overwritten.
+			'zoom'           => $args['zoom'],
 
-				// Map type, see https://developers.google.com/maps/documentation/javascript/reference#MapTypeId.
-				'mapTypeId' => 'ROADMAP',
-			)
-		);
+			// Map type, see https://developers.google.com/maps/documentation/javascript/reference#MapTypeId.
+			'mapTypeId'      => 'ROADMAP',
+
+			// Open Info Window
+			'openInfoWindow' => false,
+		] );
+
+		// Google Maps renders the info window as HTML.
+		$args['info_window'] = is_string( $args['info_window'] ) ? wp_kses_post( $args['info_window'] ) : '';
 
 		$output = sprintf(
 			'<div class="rwmb-map-canvas" data-map_options="%s" style="width:%s;height:%s"></div>',

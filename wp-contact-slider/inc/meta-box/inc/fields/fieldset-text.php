@@ -1,19 +1,13 @@
 <?php
-/**
- * The text fieldset field, which allows users to enter content for a list of text fields.
- *
- * @package Meta Box
- */
+defined( 'ABSPATH' ) || die;
 
 /**
- * Fieldset text class.
+ * The text fieldset field, which allows users to enter content for a list of text fields.
  */
-class RWMB_Fieldset_Text_Field extends RWMB_Text_Field {
-	/**
-	 * Enqueue field scripts and styles.
-	 */
+class RWMB_Fieldset_Text_Field extends RWMB_Input_Field {
 	public static function admin_enqueue_scripts() {
-		wp_enqueue_style( 'rwmb-fieldset-text', RWMB_CSS_URL . 'fieldset-text.css', '', RWMB_VER );
+		wp_enqueue_style( 'rwmb-fieldset-text', RWMB_CSS_URL . 'fieldset-text.css', [], RWMB_VER );
+		wp_style_add_data( 'rwmb-fieldset-text', 'path', RWMB_CSS_DIR . 'fieldset-text.css' );
 	}
 
 	/**
@@ -25,39 +19,25 @@ class RWMB_Fieldset_Text_Field extends RWMB_Text_Field {
 	 * @return string
 	 */
 	public static function html( $meta, $field ) {
-		$html = array();
+		$html = [];
 		$tpl  = '<p><label>%s</label> %s</p>';
 
+		if ( ! is_array( $field['options'] ) ) {
+			return '';
+		}
+
 		foreach ( $field['options'] as $key => $label ) {
-			$value                       = isset( $meta[ $key ] ) ? $meta[ $key ] : '';
+			$value                       = $meta[ $key ] ?? '';
 			$field['attributes']['name'] = $field['field_name'] . "[{$key}]";
 			$html[]                      = sprintf( $tpl, $label, parent::html( $value, $field ) );
 		}
 
-		$out = '<fieldset><legend>' . $field['desc'] . '</legend>' . implode( ' ', $html ) . '</fieldset>';
+		$out = '<fieldset>' . ( $field['desc'] ? '<legend>' . $field['desc'] . '</legend>' : '' ) . implode( ' ', $html ) . '</fieldset>';
 
 		return $out;
 	}
 
-	/**
-	 * Do not show field description.
-	 *
-	 * @param array $field Field parameters.
-	 *
-	 * @return string
-	 */
-	public static function input_description( $field ) {
-		return '';
-	}
-
-	/**
-	 * Do not show field description.
-	 *
-	 * @param array $field Field parameters.
-	 *
-	 * @return string
-	 */
-	public static function label_description( $field ) {
+	protected static function input_description( array $field ): string {
 		return '';
 	}
 
@@ -89,9 +69,9 @@ class RWMB_Fieldset_Text_Field extends RWMB_Text_Field {
 	public static function format_value( $field, $value, $args, $post_id ) {
 		$output = '<table><thead><tr>';
 		foreach ( $field['options'] as $label ) {
-			$output .= "<th>$label</th>";
+			$output .= '<th>' . esc_html( $label ) . '</th>';
 		}
-		$output .= '</tr></thead></tbody>';
+		$output .= '</tr></thead><tbody>';
 
 		if ( ! $field['clone'] ) {
 			$output .= self::format_single_value( $field, $value, $args, $post_id );
@@ -117,9 +97,19 @@ class RWMB_Fieldset_Text_Field extends RWMB_Text_Field {
 	public static function format_single_value( $field, $value, $args, $post_id ) {
 		$output = '<tr>';
 		foreach ( $value as $subvalue ) {
-			$output .= "<td>$subvalue</td>";
+			$output .= '<td>' . esc_html( $subvalue ) . '</td>';
 		}
 		$output .= '</tr>';
 		return $output;
+	}
+
+	/**
+	 * Since we're using an array of text fields, we need to check if all of them are empty.
+	 * Otherwise, there is no way to know if the field is empty or not.
+	 */
+	public static function value( $new, $old, $post_id, $field ) {
+		$all_empty = empty( array_filter( (array) $new ) );
+
+		return $all_empty ? [] : $new;
 	}
 }

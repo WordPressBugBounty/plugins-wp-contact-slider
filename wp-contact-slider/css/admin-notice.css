@@ -1,0 +1,104 @@
+.wpcs-first-notice {
+	padding: 0;
+}
+.wp-6-c {
+	width: 49%;
+	display: inline-block;
+}
+.wp-6-c img {
+	width: auto;
+	height: 128px;
+	float: left;
+	margin-bottom: -4px;
+}
+.content-contact {
+	float: left;
+	width: 74%;
+}
+.logo-contact {
+	float: left;
+}
+.content-contact h2 {
+	padding: 0 !important;
+	font-size: 16px;
+	margin: 7px 0 0 0 !important;
+	line-height: 24px;
+	padding-left: 14px !important;
+}
+.content-contact p {
+	line-height: 16px;
+	margin: 0;
+	padding-left: 16px;
+}
+.content-contact .button.button-primary.button-hero {
+	box-shadow: 0 2px 0 #006799;
+	margin: 8px 0 0 16px;
+	height: auto;
+	line-height: 34px;
+	font-weight: bold;
+}
+.wpcs-first-notice > h2 {
+	position: absolute;
+	top: -61px;
+	display: none;
+	font-weight: bold;
+}
+.wpcs_coupon_code {
+	font-weight: bold;
+}
+.wpcs_coupon_line {
+	background: #dd3333;
+	padding: 0 10px 3px 5px !important;
+	color: #fff;
+}
+.wpcs_coupon_line_wrap {
+	margin: 0;
+	overflow: hidden;
+	position: relative;
+}
+.wpcs_coupon_line {
+	color: #fff;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+.wpcs_coupon_line_wrap:after {
+	content: '';
+	top: 0;
+	transform: translateX(100%);
+	width: 100%;
+	height: 220px;
+	position: absolute;
+	z-index: 1;
+	animation: wpcs-coupon-slide 1s infinite;
+	background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.8) 50%, rgba(128, 186, 232, 0) 99%, rgba(125, 185, 232, 0) 100%);
+}
+@keyframes wpcs-coupon-slide {
+	0% { transform: translateX(-100%); }
+	100% { transform: translateX(100%); }
+}
+@media only screen and (max-width: 1252px) {
+	.content-contact .button.button-primary.button-hero {
+		margin: 3px 0 0 16px;
+	}
+	.wp-6-c img {
+		height: 100px;
+	}
+	.content-contact p {
+		margin: 5px 0 0 0;
+	}
+	.wp_contact_notice {
+		margin-top: 65px;
+	}
+	.wpcs-first-notice > h2 {
+		display: block;
+	}
+	.content-contact h2 {
+		display: none;
+	}
+}
+@media only screen and (max-width: 1024px) {
+	.wp-6-c {
+		width: 100%;
+	}
+}

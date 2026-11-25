@@ -1,215 +1,129 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
-add_action( 'admin_footer', 'wpcs_notice_script' );
+add_action( 'admin_enqueue_scripts', 'wpcs_enqueue_notice_assets' );
 /**
- * @author Mohammad Mursaleen
- * @usage script to run ajax request on closing notice
+ * Notice CSS and dismiss script, only on slider screens.
+ *
+ * @param string $hook_suffix Current admin page.
  */
-function wpcs_notice_script() {
+function wpcs_enqueue_notice_assets( $hook_suffix ) {
+	unset( $hook_suffix );
 
-	if ( ! wpcs_time_to_display_update_notice() ) {
+	if ( ! wpcs_is_wpcs_admin_screen() || ! wpcs_time_to_display_update_notice() ) {
 		return;
 	}
 
-	// if(get_transient('wpcs-admin-notice-2-2-hold'))
-	// return '';
+	$version = defined( 'WPCS_VERSION' ) ? WPCS_VERSION : '2.5.6';
+	$base    = dirname( __DIR__ ) . '/wp_contact_slider.php';
 
-	// if (  get_option('wpcs_display_notice_2_2') == 'no' )
-	// return '';
-
-	?>
-	<script>
-		jQuery(document).on( 'click', '.wpcs-first-notice .notice-dismiss', function() {
-			jQuery.ajax({
-				url: ajaxurl,
-				data: {
-					action: 'dismiss_wpcs_notice'
-				}
-			})
-		})
-	</script>
-	<style>
-		.wpcs-first-notice {
-			padding: 0;
-		}
-		.wp-6-c {
-			width: 49%;
-			display: inline-block;
-		}
-		.wp-6-c img {
-			width: auto;
-			height: 128px;
-			float: left;
-			margin-bottom: -4px;
-		}
-		.content-contact {
-			float: left;
-			width: 74%;
-		}
-		.logo-contact {
-			float: left;
-		}
-		.content-contact h2 {
-			padding: 0!important;
-			font-size: 16px;
-			margin: 7px 0 0 0!important;
-			line-height: 24px;
-			padding-left: 14px!important;
-		}
-		.content-contact p {
-			line-height: 16px;
-			margin: 0;
-			padding-left: 16px;
-		}
-		.content-contact .button.button-primary.button-hero {
-			box-shadow: 0 2px 0 #006799;
-			margin: 8px 0 0px 16px;
-			height: auto;
-			line-height: 34px;
-			font-weight: bold;
-		}
-		.wpcs-first-notice > h2 {
-			position: absolute;
-			top: -61px;
-			display: none;
-			font-weight: bold;
-		}
-		.wpcs_coupon_code{
-			font-weight:bold;
-		}
-		.wpcs_coupon_line{
-			background: #dd3333;
-			padding: 0px 10px 3px 5px !important;
-			color: white;         
-		}
-		/* CSS For Discount Animation */
-		.wpcs_coupon_line_wrap {
-			margin:0;
-			overflow:hidden;
-			}
-
-			/* blue bar */
-			.wpcs_coupon_line_wrap {
-			position: relative;
-			}
-
-			/* text */
-			.wpcs_coupon_line {
-			color:#fff;
-			left:50%;
-			transform:translate(-50%,-50%);
-			}
-			.wpcs_coupon_line {
-			top:50%;
-			}
-
-			/* Shine */
-			.wpcs_coupon_line_wrap:after {
-				content:'';
-			top:0;
-				transform:translateX(100%);
-				width:100%;
-				height:220px;
-				position: absolute;
-				z-index:1;
-				animation: slide 1s infinite;
-			/* 
-			CSS Gradient - complete browser support from http://www.colorzilla.com/gradient-editor/ 
-			*/
-			background: -moz-linear-gradient(left, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(128,186,232,0) 99%, rgba(125,185,232,0) 100%); /* FF3.6+ */
-				background: -webkit-gradient(linear, left top, right top, color-stop(0%,rgba(255,255,255,0)), color-stop(50%,rgba(255,255,255,0.8)), color-stop(99%,rgba(128,186,232,0)), color-stop(100%,rgba(125,185,232,0))); /* Chrome,Safari4+ */
-				background: -webkit-linear-gradient(left, rgba(255,255,255,0) 0%,rgba(255,255,255,0.8) 50%,rgba(128,186,232,0) 99%,rgba(125,185,232,0) 100%); /* Chrome10+,Safari5.1+ */
-				background: -o-linear-gradient(left, rgba(255,255,255,0) 0%,rgba(255,255,255,0.8) 50%,rgba(128,186,232,0) 99%,rgba(125,185,232,0) 100%); /* Opera 11.10+ */
-				background: -ms-linear-gradient(left, rgba(255,255,255,0) 0%,rgba(255,255,255,0.8) 50%,rgba(128,186,232,0) 99%,rgba(125,185,232,0) 100%); /* IE10+ */
-				background: linear-gradient(to right, rgba(255,255,255,0) 0%,rgba(255,255,255,0.8) 50%,rgba(128,186,232,0) 99%,rgba(125,185,232,0) 100%); /* W3C */
-				filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#00ffffff', endColorstr='#007db9e8',GradientType=1 ); /* IE6-9 */
-			}
-			/* animation */
-			@keyframes slide {
-				0% {transform:translateX(-100%);}
-				100% {transform:translateX(100%);}
-			}
-
-		@media only screen and (max-width: 1252px) {
-
-			.content-contact .button.button-primary.button-hero {
-				margin: 3px 0 0px 16px;
-			}
-			.wp-6-c img {
-				height: 100px;
-			}
-			.content-contact p {
-				margin: 5px 0 0 0;
-			}
-			.wp_contact_notice {
-				margin-top: 65px;
-			}
-			.wpcs-first-notice > h2 {
-				display: block;
-			}
-			.content-contact h2{
-				display: none;
-			}
-		}
-		@media only screen and (max-width: 1024px) {
-			.wp-6-c {
-				width: 100%;
-			}
-		}
-	</style>
-	<?php
+	wp_enqueue_style( 'wpcs-admin-notice', plugins_url( 'css/admin-notice.css', $base ), array(), $version );
+	wp_enqueue_script( 'jquery' );
+	wp_add_inline_script(
+		'jquery',
+		'jQuery(document).on("click", ".wpcs-first-notice .notice-dismiss", function(){ jQuery.ajax({ url: ajaxurl, type: "POST", data: { action: "dismiss_wpcs_notice", nonce: "' . esc_js( wp_create_nonce( 'wpcs_dismiss_notice' ) ) . '" } }); });'
+	);
 }
 
+/**
+ * Whether the current admin screen belongs to the slider post type.
+ *
+ * @return bool
+ */
+function wpcs_is_wpcs_admin_screen() {
+	if ( ! function_exists( 'get_current_screen' ) ) {
+		return false;
+	}
+	$screen = get_current_screen();
+	return $screen && isset( $screen->post_type ) && 'wpcs' === $screen->post_type;
+}
 
 add_action( 'admin_notices', 'wpcs_update_notice' );
 /**
- * @author Mohammad Mursaleen
- * @usage display update notice
+ * Display the add-ons notice on slider screens.
  */
 function wpcs_update_notice() {
-
-	if ( ! wpcs_time_to_display_update_notice() ) {
+	if ( ! wpcs_time_to_display_update_notice() || ! wpcs_is_wpcs_admin_screen() ) {
 		return;
 	}
 
-	$screen = get_current_screen();
-
-	if ( 'wpcs' !== $screen->post_type ) {
-		return;
-	}
-	$data = ! isset( $_POST['_wpcs_nonce'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpcs_nonce'] ) ), '_wpcs_nonce' ) ? $_REQUEST : '';
-	if ( isset( $data['page'] ) && 'wp-contact-slider-addons' === $data['page'] ) {
+	$page = filter_input( INPUT_GET, 'page', FILTER_CALLBACK, array( 'options' => 'sanitize_key' ) );
+	if ( 'wp-contact-slider-addons' === $page ) {
 		update_option( 'wpcs_display_notice_2_2', 'no' );
 		return;
 	}
 
-	$addons_url = 'https://wpcontactslider.com/addons-bundle/?utm=plugin_bundle'; // admin_url( 'edit.php?post_type=wpcs&page=wp-contact-slider-addons', 'https' );
+	$addons_url = 'https://wpcontactslider.com/addons-bundle/';
+	$base       = dirname( __DIR__ ) . '/wp_contact_slider.php';
+	$images     = array(
+		'notice-images/bundle-addon-icon.png',
+		'notice-images/advance-setting-icon.png',
+		'notice-images/trigers-and-shortcodes.png',
+		'notice-images/font-awesome-icon.png',
+		'notice-images/multiple-sliders.png',
+	);
+	$urls       = array();
+	foreach ( $images as $image ) {
+		$urls[] = esc_url( plugins_url( 'img/' . $image, $base ) );
+	}
 
-	$class   = 'notice notice-info is-dismissible wpcs-first-notice';
-	$heading = __( 'GET ADD-ONS BUNDLE FOR WP CONTACT SLIDER', 'wpcs' );
-
-	printf( '<div data-dismissible="notice-one-forever-wpcs" class="%1$s"><h2 style="font-size: 20px;font-weight: 800;" >%2$s</h2><div class="wp_contact_notice"><div class="wp-6-c"><div class="logo-contact"><a href="' . esc_url( $addons_url ) . '"><img alt=""src="' . esc_url( plugins_url( 'img/notice-images/bundle-addon-icon.png', dirname( __FILE__ ) ) ) . '"></a></div><div class="content-contact"><h2>GET ADD-ONS BUNDLE FOR WP CONTACT SLIDER</h2><p>Unleash the power of WP Contact Slider with AddOns Bundle</p><p class="wpcs_coupon_line_wrap"><span class="wpcs_coupon_line">Use Coupon code <span class="wpcs_coupon_code">LIFETIME40FF</span> to get <b>40% discount</b> on LifeTime Bundles</span></p><a href="' . esc_url( $addons_url ) . '"class="button button-hero button-primary">GET ADD-ONS BUNDLE</a></div></div><div class="wp-6-c"><a href="' . esc_url( $addons_url ) . '"><img alt=""src="' . esc_url( plugins_url( 'img/notice-images/advance-setting-icon.png', dirname( __FILE__ ) ) ) . '"></a><a href="' . esc_url( $addons_url ) . '"><img alt=""src="' . esc_url( plugins_url( 'img/notice-images/trigers-and-shortcodes.png', dirname( __FILE__ ) ) ) . '"></a><a href="' . esc_url( $addons_url ) . '"><img alt=""src="' . esc_url( plugins_url( 'img/notice-images/font-awesome-icon.png', dirname( __FILE__ ) ) ) . '"></a><a href="' . esc_url( $addons_url ) . '"><img alt=""src="' . esc_url( plugins_url( 'img/notice-images/multiple-sliders.png', dirname( __FILE__ ) ) ) . '"></a></div></div></div>', esc_attr( $class ), esc_html( $heading ) );
-
+	$heading = esc_html__( 'GET ADD-ONS BUNDLE FOR WP CONTACT SLIDER', 'wp-contact-slider' );
+	$intro   = esc_html__( 'Unleash the power of WP Contact Slider with AddOns Bundle', 'wp-contact-slider' );
+	$coupon  = sprintf(
+		/* translators: %s: coupon code. */
+		esc_html__( 'Use Coupon code %s to get 40%% discount on LifeTime Bundles', 'wp-contact-slider' ),
+		'<span class="wpcs_coupon_code">LIFETIME40FF</span>'
+	);
+	$button  = esc_html__( 'GET ADD-ONS BUNDLE', 'wp-contact-slider' );
+	$link    = esc_url( $addons_url );
+	?>
+	<div data-dismissible="notice-one-forever-wpcs" class="notice notice-info is-dismissible wpcs-first-notice">
+		<h2><?php echo esc_html( $heading ); ?></h2>
+		<div class="wp_contact_notice">
+			<div class="wp-6-c">
+				<div class="logo-contact"><a href="<?php echo esc_url( $link ); ?>"><img alt="" src="<?php echo esc_url( $urls[0] ); ?>"></a></div>
+				<div class="content-contact">
+					<h2><?php echo esc_html( $heading ); ?></h2>
+					<p><?php echo esc_html( $intro ); ?></p>
+					<p class="wpcs_coupon_line_wrap"><span class="wpcs_coupon_line"><?php echo wp_kses( $coupon, array( 'span' => array( 'class' => true ) ) ); ?></span></p>
+					<a href="<?php echo esc_url( $link ); ?>" class="button button-hero button-primary"><?php echo esc_html( $button ); ?></a>
+				</div>
+			</div>
+			<div class="wp-6-c">
+				<a href="<?php echo esc_url( $link ); ?>"><img alt="" src="<?php echo esc_url( $urls[1] ); ?>"></a>
+				<a href="<?php echo esc_url( $link ); ?>"><img alt="" src="<?php echo esc_url( $urls[2] ); ?>"></a>
+				<a href="<?php echo esc_url( $link ); ?>"><img alt="" src="<?php echo esc_url( $urls[3] ); ?>"></a>
+				<a href="<?php echo esc_url( $link ); ?>"><img alt="" src="<?php echo esc_url( $urls[4] ); ?>"></a>
+			</div>
+		</div>
+	</div>
+	<?php
 }
 
-
 /**
- * save in option to not display it again
- **/
+ * Save the option that hides the notice.
+ */
 function wpcs_dismiss_update_notice() {
+	check_ajax_referer( 'wpcs_dismiss_notice', 'nonce' );
+
+	if ( ! current_user_can( 'manage_options' ) ) {
+		wp_send_json_error( array( 'message' => 'Forbidden' ), 403 );
+	}
 
 	update_option( 'wpcs_display_notice_2_2', 'no' );
-
+	wp_send_json_success();
 }
 add_action( 'wp_ajax_dismiss_wpcs_notice', 'wpcs_dismiss_update_notice' );
 
-
 /**
- * Wpcs_time_to_display_update_notice.
- **/
+ * Whether the delayed admin notice should show.
+ *
+ * @return bool
+ */
 function wpcs_time_to_display_update_notice() {
-
 	if ( get_transient( 'wpcs-admin-notice-2-2-hold' ) ) {
 		return false;
 	}
@@ -219,5 +133,4 @@ function wpcs_time_to_display_update_notice() {
 	}
 
 	return true;
-
 }

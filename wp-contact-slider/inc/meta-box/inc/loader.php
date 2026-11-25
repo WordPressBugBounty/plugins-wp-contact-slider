@@ -3,24 +3,13 @@
  * Load plugin's files with check for installing it as a standalone plugin or
  * a module of a theme / plugin. If standalone plugin is already installed, it
  * will take higher priority.
- *
- * @package Meta Box
- */
-
-/**
- * Plugin loader class.
- *
- * @package Meta Box
  */
 class RWMB_Loader {
-	/**
-	 * Define plugin constants.
-	 */
 	protected function constants() {
 		// Script version, used to add version for scripts and styles.
-		define( 'RWMB_VER', '4.16.3' );
+		define( 'RWMB_VER', '5.15.4' );
 
-		list( $path, $url ) = self::get_path( dirname( dirname( __FILE__ ) ) );
+		list( $path, $url ) = self::get_path( dirname( __DIR__ ) );
 
 		// Plugin URLs, for fast enqueuing scripts and styles.
 		define( 'RWMB_URL', $url );
@@ -30,17 +19,19 @@ class RWMB_Loader {
 		// Plugin paths, for including files.
 		define( 'RWMB_DIR', $path );
 		define( 'RWMB_INC_DIR', trailingslashit( RWMB_DIR . 'inc' ) );
+		define( 'RWMB_JS_DIR', trailingslashit( RWMB_DIR . 'js' ) );
+		define( 'RWMB_CSS_DIR', trailingslashit( RWMB_DIR . 'css' ) );
 	}
 
 	/**
 	 * Get plugin base path and URL.
 	 * The method is static and can be used in extensions.
 	 *
-	 * @link http://www.deluxeblogtips.com/2013/07/get-url-of-php-file-in-wordpress.html
+	 * @link https://deluxeblogtips.com/get-url-of-php-file-in-wordpress/
 	 * @param string $path Base folder path.
 	 * @return array Path and URL.
 	 */
-	public static function get_path( $path = '' ) {
+	public static function get_path( string $path = '' ): array {
 		// Plugin base path.
 		$path       = wp_normalize_path( untrailingslashit( $path ) );
 		$themes_dir = wp_normalize_path( untrailingslashit( dirname( get_stylesheet_directory() ) ) );
@@ -50,9 +41,9 @@ class RWMB_Loader {
 
 		// Included into themes.
 		if (
-			0 !== strpos( $path, wp_normalize_path( WP_PLUGIN_DIR ) )
-			&& 0 !== strpos( $path, wp_normalize_path( WPMU_PLUGIN_DIR ) )
-			&& 0 === strpos( $path, $themes_dir )
+			! str_starts_with( $path, wp_normalize_path( WP_PLUGIN_DIR ) )
+			&& ! str_starts_with( $path, wp_normalize_path( WPMU_PLUGIN_DIR ) )
+			&& str_starts_with( $path, $themes_dir )
 		) {
 			$themes_url = untrailingslashit( dirname( get_stylesheet_directory_uri() ) );
 			$url        = str_replace( $themes_dir, $themes_url, $path );
@@ -61,7 +52,7 @@ class RWMB_Loader {
 		$path = trailingslashit( $path );
 		$url  = trailingslashit( $url );
 
-		return array( $path, $url );
+		return [ $path, $url ];
 	}
 
 	/**
@@ -70,42 +61,56 @@ class RWMB_Loader {
 	public function init() {
 		$this->constants();
 
+		// PSR-4 autoload.
+		$psr4_autoload = dirname( __DIR__ ) . '/vendor/autoload.php';
+		if ( file_exists( $psr4_autoload ) ) {
+			require $psr4_autoload;
+		}
+
 		// Register autoload for classes.
 		require_once RWMB_INC_DIR . 'autoloader.php';
 		$autoloader = new RWMB_Autoloader();
 		$autoloader->add( RWMB_INC_DIR, 'RW_' );
 		$autoloader->add( RWMB_INC_DIR, 'RWMB_' );
-		$autoloader->add( RWMB_INC_DIR . 'about', 'RWMB_' );
 		$autoloader->add( RWMB_INC_DIR . 'fields', 'RWMB_', '_Field' );
 		$autoloader->add( RWMB_INC_DIR . 'walkers', 'RWMB_Walker_' );
 		$autoloader->add( RWMB_INC_DIR . 'interfaces', 'RWMB_', '_Interface' );
 		$autoloader->add( RWMB_INC_DIR . 'storages', 'RWMB_', '_Storage' );
 		$autoloader->add( RWMB_INC_DIR . 'helpers', 'RWMB_Helpers_' );
+		$autoloader->add( RWMB_INC_DIR . 'update', 'RWMB_Update_' );
 		$autoloader->register();
 
 		// Plugin core.
 		$core = new RWMB_Core();
 		$core->init();
 
-		if ( is_admin() ) {
-			$about = new RWMB_About();
-			$about->init();
-		}
+		$shortcode = new RWMB_Shortcode();
+		$shortcode->init();
 
 		// Validation module.
 		new RWMB_Validation();
 
-		$sanitize = new RWMB_Sanitizer();
-		$sanitize->init();
+		$sanitizer = new RWMB_Sanitizer();
+		$sanitizer->init();
 
 		$media_modal = new RWMB_Media_Modal();
 		$media_modal->init();
 
 		// WPML Compatibility.
-		$wpml = new RWMB_WPML();
-		$wpml->init();
+		new \MetaBox\Integrations\WPML();
+
+		// Register categories for page builders.
+		new \MetaBox\Integrations\Block();
+		new \MetaBox\Integrations\Bricks();
+		new \MetaBox\Integrations\Elementor();
+		new \MetaBox\Integrations\Oxygen();
+		new \MetaBox\Integrations\WooCommerce\HPOS\Manager();
 
 		// Public functions.
 		require_once RWMB_INC_DIR . 'functions.php';
+
+		// Block bindings (needs rwmb_get_registry from functions.php).
+		rwmb_get_registry( 'block_bindings' )->add( new \MetaBox\Integrations\BlockBindings\Post() );
+		new \MetaBox\Integrations\BlockBindings\Loader();
 	}
 }
